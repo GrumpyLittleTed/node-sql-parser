@@ -6,7 +6,7 @@ import { explainToSQL } from './explain'
 import { selectToSQL } from './select'
 import { deleteToSQL } from './delete'
 import { updateToSQL } from './update'
-import { insertToSQL } from './insert'
+import { insertToSQL, valuesToSQL } from './insert'
 import {
   callToSQL,
   commonCmdToSQL,
@@ -66,6 +66,7 @@ const typeToSQLFn = {
   proc        : procToSQL,
   raise       : raiseToSQL,
   transaction : transactionToSQL,
+  values      : valuesToSQL,
 }
 
 function unionToSQL(stmt) {

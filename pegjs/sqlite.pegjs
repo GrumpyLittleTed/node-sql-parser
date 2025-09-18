@@ -247,13 +247,24 @@ crud_stmt
 
 multiple_stmt
   = head:crud_stmt tail:(__ SEMICOLON __ crud_stmt)* {
-      const headAst = head && head.ast || head
-      const cur = tail && tail.length && tail[0].length >= 4 ? [headAst] : headAst;
-      if (!tail) tail = []
-      for (let i = 0; i < tail.length; i++) {
-        if(!tail[i][3] || tail[i][3].length === 0) continue;
-        cur.push(tail[i][3] && tail[i][3].ast || tail[i][3]);
+      let cur = [];
+      const processStmt = (stmt) => {
+        const ast = stmt && stmt.ast || stmt;
+        if (Array.isArray(ast)) {
+          cur = cur.concat(ast.filter(item => item !== null && item !== undefined && (typeof item !== 'object' || Object.keys(item).length !== 0)));
+        } else if (ast !== null && ast !== undefined && (typeof ast !== 'object' || Object.keys(ast).length !== 0)) {
+          cur.push(ast);
+        }
+      };
+
+      processStmt(head);
+
+      if (tail) {
+        for (let i = 0; i < tail.length; i++) {
+          processStmt(tail[i][3]);
+        }
       }
+
       return {
         tableList: Array.from(tableList),
         columnList: columnListTableAlias(columnList),
@@ -1973,6 +1984,9 @@ replace_insert
 value_clause
   = KW_VALUES __ l:value_list  { return { type: 'values', values: l } }
 
+values_stmt
+  = value_clause
+
 value_list
   = head:value_item tail:(__ COMMA __ value_item)* {
       return createList(head, tail);
@@ -2999,8 +3013,8 @@ proc_stmts
   = proc_stmt*
 
 proc_stmt
-  = &{ varList = []; return true; } __ s:(assign_stmt / return_stmt) {
-      return { stmt: s, vars: varList };
+  = &{ varList = []; return true; } __ s:(assign_stmt / return_stmt / values_stmt) {
+      return s;
     }
 
 assign_stmt_list
@@ -3029,6 +3043,7 @@ proc_expr
   / proc_join
   / proc_additive_expr
   / proc_array
+  / values_stmt
 
 proc_additive_expr
   = head:proc_multiplicative_expr

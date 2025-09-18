@@ -17,7 +17,7 @@ function valuesToSQL(stmt) {
     const sql = exprToSQL(value)
     return [toUpper(value.prefix), `(${sql})`].filter(hasVal).join('')
   })
-  return clauses.join(', ')
+  return `VALUES ${clauses.join(', ')}`
 }
 
 function partitionToSQL(partition) {
